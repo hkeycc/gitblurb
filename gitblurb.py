@@ -110,7 +110,7 @@ def call_server(diff, branch_name):
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        "http://localhost:5000/generate",
+        "https://gitblurb.onrender.com/generate",
         data=payload,
         headers={"content-type": "application/json"},
         method="POST"
