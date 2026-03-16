@@ -29,9 +29,6 @@ gitblurb generates:
 
 gitblurb reads your local git diff, sends it to a secure backend, and proxies it to the Anthropic API. Output is printed to stdout and copied to your clipboard automatically.
 
-## Free tier
-
-20 uses included. No API key or account required. Paid plans coming soon.
 
 ## Requirements
 
