@@ -14,7 +14,7 @@ import json
 # ── Config ────────────────────────────────────────────────────────────────────
 
 FREE_USES_FILE = os.path.expanduser("~/.gitblurb_uses")
-FREE_LIMIT = 20
+FREE_LIMIT = 50
 SERVER_URL = "https://gitblurb.onrender.com/generate"
 
 SYSTEM_PROMPT = """You are an expert software engineer writing a GitHub pull request description.
@@ -124,16 +124,9 @@ def copy_to_clipboard(text):
         return False
 
 def show_paywall():
-    print("\n" + "-" * 60)
-    print("  You have used all 20 free uses.")
-    print()
-    print("  Subscribe for $9/month to continue:")
-    print("  https://your-stripe-link-here.com")
-    print()
-    print("  After subscribing, set your license key:")
-    print("  GITBLURB_LICENSE=your-license-key")
-    print("-" * 60 + "\n")
+    print("error: usage limit reached. visit https://github.com/hkeycc/gitblurb for more info.")
     sys.exit(0)
+    
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -149,8 +142,7 @@ def main():
     branch = get_branch_name()
 
     print(f"gitblurb: {branch} -> {base_branch}")
-    if not has_license:
-        print(f"free uses remaining: {remaining - 1}")
+    
     print("generating...\n")
 
     diff = get_git_diff(base_branch)
