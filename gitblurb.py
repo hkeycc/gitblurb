@@ -4,7 +4,8 @@ gitblurb - AI-powered PR description generator
 Usage: python gitblurb.py
 """
 
-
+import urllib.request
+import urllib.error
 import subprocess
 import sys
 import os
@@ -61,15 +62,15 @@ def get_git_diff(base_branch="main"):
     """Get the diff of the current branch vs base branch."""
     # First try: diff vs base branch
     result = subprocess.run(
-        ["git", "diff", base_branch + "...HEAD"],
-        capture_output=True, text=True
-    )
+    ["git", "diff", base_branch + "...HEAD"],
+    capture_output=True, text=True, encoding="utf-8", errors="replace"
+)
     if result.returncode != 0:
         # Fallback: diff of staged + unstaged changes
         result = subprocess.run(
-            ["git", "diff", "HEAD"],
-            capture_output=True, text=True
-        )
+    ["git", "diff", base_branch + "...HEAD"],
+    capture_output=True, text=True, encoding="utf-8", errors="replace"
+)
     if result.returncode != 0:
         print("\n❌  Could not get git diff. Are you inside a git repo?\n")
         sys.exit(1)
@@ -78,9 +79,9 @@ def get_git_diff(base_branch="main"):
     if not diff:
         # Try staged only
         result = subprocess.run(
-            ["git", "diff", "--cached"],
-            capture_output=True, text=True
-        )
+    ["git", "diff", base_branch + "...HEAD"],
+    capture_output=True, text=True, encoding="utf-8", errors="replace"
+)
         diff = result.stdout.strip()
 
     if not diff:
@@ -97,42 +98,34 @@ def get_git_diff(base_branch="main"):
 def get_branch_name():
     result = subprocess.run(
         ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-        capture_output=True, text=True
+        capture_output=True, text=True, encoding="utf-8", errors="replace"
     )
     return result.stdout.strip() if result.returncode == 0 else "unknown"
-
-def call_claude(diff, branch_name):
-    """Call the Anthropic API and return the PR description."""
-    import urllib.request
-    import urllib.error
-
-    user_message = f"Branch: {branch_name}\n\nDiff:\n{diff}"
-
+def call_server(diff, branch_name):
+    license_key = os.environ.get("GITBLURB_LICENSE", "FREE_TRIAL")
     payload = json.dumps({
-        "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 1024,
-        "system": SYSTEM_PROMPT,
-        "messages": [{"role": "user", "content": user_message}]
+        "diff": diff,
+        "branch": branch_name,
+        "license_key": license_key
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
+        "http://localhost:5000/generate",
         data=payload,
-        headers={
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
+        headers={"content-type": "application/json"},
         method="POST"
     )
 
     try:
         with urllib.request.urlopen(req) as response:
             data = json.loads(response.read().decode("utf-8"))
-            return data["content"][0]["text"]
+            return data["description"]
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8")
-        print(f"\n❌  API error {e.code}: {error_body}\n")
+        print(f"\n❌  Server error {e.code}: {error_body}\n")
+        sys.exit(1)
+    except urllib.error.URLError:
+        print("\n❌  Could not connect to server. Is it running?\n")
         sys.exit(1)
 
 def copy_to_clipboard(text):
@@ -166,8 +159,7 @@ def main():
     print("\n🔍  gitblurb — AI PR Description Generator")
     print("─" * 60)
 
-    # Check API key
-    check_api_key()
+    
 
     # Check free usage limit
     # (Skip limit check if a license key is set)
@@ -191,7 +183,7 @@ def main():
     diff = get_git_diff(base_branch)
 
     # Call Claude
-    result = call_claude(diff, branch)
+    result = call_server(diff, branch)
 
     # Increment use count
     if not has_license:
