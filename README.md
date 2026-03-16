@@ -1,6 +1,7 @@
 # gitblurb
+Generate clean pull request descriptions directly from your git diff.
 
-A CLI tool that analyzes your git diff and generates structured, context-aware pull request descriptions using Claude AI. Designed to eliminate the manual overhead of writing PR metadata without sacrificing quality or specificity.
+Gitblurb is a CLI tool that analyzes your git diff and generates structured, context-aware pull request descriptions using Claude AI. Designed to eliminate the manual overhead of writing PR metadata without sacrificing quality or specificity.
 
 ![demo](demo.gif)
 
