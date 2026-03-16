@@ -28,7 +28,7 @@ gitblurb generates:
 
 ## How it works
 
-gitblurb reads your local git diff, sends it to the Anthropic API. Output is printed to stdout and copied to your clipboard automatically.
+gitblurb reads your local git diff, sends it to the Anthropic API through a hosted endpoint. Output is printed to stdout and copied to your clipboard automatically.
 
 
 ## Requirements
